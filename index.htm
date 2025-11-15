@@ -191,11 +191,15 @@
             font-size: 24px;
             color: #4fc3f7;
             z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border-radius: 10px;
+            border: 2px solid #4fc3f7;
         }
     </style>
 </head>
 <body>
-    <div class="loading" id="loading">Загрузка Frozen City...</div>
+    <div class="loading" id="loading">🚀 Загрузка Frozen City...</div>
     <div id="gameContainer"></div>
     
     <div class="ui-overlay">
@@ -272,6 +276,8 @@
         let canvas, ctx;
         
         function init() {
+            console.log("🚀 Инициализация игры...");
+            
             // Создаем canvas
             canvas = document.createElement('canvas');
             canvas.width = window.innerWidth;
@@ -290,7 +296,10 @@
             createVillagers();
             
             // Скрываем загрузку
-            document.getElementById('loading').style.display = 'none';
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                console.log("✅ Игра загружена!");
+            }, 2000);
             
             // Запускаем анимацию
             animate();
@@ -300,7 +309,6 @@
         }
         
         function createGround() {
-            // Просто добавляем объект земли
             sceneObjects.push({
                 type: 'ground',
                 color: '#2E8B57'
@@ -308,7 +316,6 @@
         }
         
         function createInitialBuildings() {
-            // Создаем несколько зданий в разных позициях
             createBuilding('hut', -8, 0, -5);
             createBuilding('hut', -5, 0, -8);
             createBuilding('sawmill', 5, 0, -6);
@@ -344,7 +351,6 @@
         }
         
         function createVillagers() {
-            // Создаем 5 жителей
             for (let i = 0; i < 5; i++) {
                 createVillager();
             }
@@ -363,21 +369,17 @@
                 idleTime: 0
             };
             
-            // Устанавливаем начальную цель
             updateVillagerTarget(villager);
-            
             villagers.push(villager);
         }
         
         function updateVillagerTarget(villager) {
-            // Выбираем случайное здание как цель
             if (sceneObjects.filter(obj => obj.type !== 'ground').length > 0) {
                 const buildings = sceneObjects.filter(obj => obj.type !== 'ground');
                 const randomBuilding = buildings[Math.floor(Math.random() * buildings.length)];
                 villager.targetX = randomBuilding.x + (Math.random() - 0.5) * 8;
                 villager.targetZ = randomBuilding.z + (Math.random() - 0.5) * 8;
             } else {
-                // Если зданий нет, случайная позиция
                 villager.targetX = (Math.random() - 0.5) * 30;
                 villager.targetZ = (Math.random() - 0.5) * 30;
             }
@@ -386,7 +388,6 @@
         
         function animateVillagers() {
             villagers.forEach(villager => {
-                // Проверяем, достиг ли житель цели
                 const distance = Math.sqrt(
                     Math.pow(villager.x - villager.targetX, 2) + 
                     Math.pow(villager.z - villager.targetZ, 2)
@@ -396,7 +397,6 @@
                     updateVillagerTarget(villager);
                 }
                 
-                // Двигаем жителя к цели
                 if (distance > 0.5) {
                     const dx = villager.targetX - villager.x;
                     const dz = villager.targetZ - villager.z;
@@ -411,17 +411,14 @@
         }
         
         function project3D(x, y, z) {
-            // Простая 3D проекция
             const scale = 20;
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             
-            // Учитываем позицию камеры
             const relX = x - camera.x;
             const relY = y - camera.y;
             const relZ = z - camera.z;
             
-            // Простая перспектива
             const distance = Math.sqrt(relX * relX + relY * relY + relZ * relZ);
             const scaleFactor = scale / (distance + 10);
             
@@ -487,17 +484,13 @@
         }
         
         function animate() {
-            // Анимируем жителей
             animateVillagers();
             
-            // Медленно двигаем камеру по кругу
             const time = Date.now() * 0.001;
             camera.x = Math.cos(time) * 20;
             camera.z = Math.sin(time) * 20;
             
-            // Рендерим сцену
             render();
-            
             requestAnimationFrame(animate);
         }
         
@@ -563,12 +556,10 @@
             
             createBuilding(type, x, 0, z);
             
-            // Обновляем ресурсы
             resources.wood -= 20;
             resources.stone -= 10;
             updateResources();
             
-            // Добавляем нового жителя при постройке хижины
             if (type === 'hut') {
                 setTimeout(() => {
                     createVillager();
@@ -584,7 +575,6 @@
             resources.coal += 5;
             updateResources();
             
-            // Меняем температуру
             const tempElement = document.getElementById('temp-value');
             const currentTemp = parseInt(tempElement.textContent);
             const newTemp = currentTemp + (Math.random() > 0.5 ? 1 : -1);
@@ -603,4 +593,17 @@
             alert(event.message);
             
             // Применяем изменения ресурсов
-            Object.keys(ev
+            Object.keys(event).forEach(key => {
+                if (key !== 'message' && resources[key] !== undefined) {
+                    resources[key] = Math.max(0, resources[key] + event[key]);
+                }
+            });
+            
+            updateResources();
+        }
+        
+        function assignWorkers() {
+            alert('Открыто меню назначения рабочих\nЗдесь можно распределить жителей по зданиям');
+        }
+        
+   
