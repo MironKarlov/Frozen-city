@@ -182,9 +182,20 @@
                 transform: translateY(100vh);
             }
         }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #4fc3f7;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
+    <div class="loading" id="loading">Загрузка Frozen City...</div>
     <div id="gameContainer"></div>
     
     <div class="ui-overlay">
@@ -213,7 +224,7 @@
         
         <div class="temperature">
             <div>❄️</div>
-            <div>-25°C</div>
+            <div id="temp-value">-25°C</div>
         </div>
         
         <div class="controls">
@@ -253,83 +264,51 @@
         <div class="snow" id="snow-container"></div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Инициализация Three.js сцены
-        let scene, camera, renderer;
-        let buildings = [];
+        // Простой 3D движок без Three.js
+        let sceneObjects = [];
         let villagers = [];
+        let camera = { x: 15, y: 10, z: 15 };
+        let canvas, ctx;
         
         function init() {
-            // Создание сцены
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a2a6c);
-            scene.fog = new THREE.Fog(0x1a2a6c, 10, 50);
+            // Создаем canvas
+            canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.display = 'block';
+            document.getElementById('gameContainer').appendChild(canvas);
+            ctx = canvas.getContext('2d');
             
-            // Создание камеры
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(15, 10, 15);
-            camera.lookAt(0, 0, 0);
-            
-            // Создание рендерера
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            document.getElementById('gameContainer').appendChild(renderer.domElement);
-            
-            // Освещение
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(20, 30, 10);
-            directionalLight.castShadow = true;
-            scene.add(directionalLight);
-            
-            // Создание земли
+            // Создаем землю
             createGround();
             
-            // Создание начальных зданий
+            // Создаем начальные здания
             createInitialBuildings();
             
-            // Создание жителей
+            // Создаем жителей
             createVillagers();
             
-            // Обработка изменения размера окна
-            window.addEventListener('resize', onWindowResize);
+            // Скрываем загрузку
+            document.getElementById('loading').style.display = 'none';
             
-            // Запуск анимации
+            // Запускаем анимацию
             animate();
+            
+            // Обработка изменения размера
+            window.addEventListener('resize', onWindowResize);
         }
         
         function createGround() {
-            // Земля
-            const groundGeometry = new THREE.PlaneGeometry(100, 100, 32);
-            const groundMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x2E8B57,
-                transparent: true,
-                opacity: 0.8
+            // Просто добавляем объект земли
+            sceneObjects.push({
+                type: 'ground',
+                color: '#2E8B57'
             });
-            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            scene.add(ground);
-            
-            // Снег на земле
-            const snowGeometry = new THREE.PlaneGeometry(100, 100, 32);
-            const snowMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.3
-            });
-            const snow = new THREE.Mesh(snowGeometry, snowMaterial);
-            snow.rotation.x = -Math.PI / 2;
-            snow.position.y = 0.01;
-            scene.add(snow);
         }
         
         function createInitialBuildings() {
-            // Создаем несколько начальных зданий
+            // Создаем несколько зданий в разных позициях
             createBuilding('hut', -8, 0, -5);
             createBuilding('hut', -5, 0, -8);
             createBuilding('sawmill', 5, 0, -6);
@@ -338,57 +317,30 @@
         }
         
         function createBuilding(type, x, y, z) {
-            let geometry, material, building;
+            const building = {
+                type: type,
+                x: x,
+                y: y,
+                z: z,
+                width: 3,
+                height: 2,
+                depth: 3,
+                color: getBuildingColor(type)
+            };
             
-            switch(type) {
-                case 'hut':
-                    geometry = new THREE.BoxGeometry(3, 2, 3);
-                    material = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-                    building = new THREE.Mesh(geometry, material);
-                    
-                    // Крыша
-                    const roofGeometry = new THREE.ConeGeometry(2.2, 1.5, 4);
-                    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
-                    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-                    roof.rotation.y = Math.PI / 4;
-                    roof.position.y = 1.75;
-                    building.add(roof);
-                    break;
-                    
-                case 'sawmill':
-                    geometry = new THREE.BoxGeometry(4, 3, 4);
-                    material = new THREE.MeshLambertMaterial({ color: 0x2E8B57 });
-                    building = new THREE.Mesh(geometry, material);
-                    break;
-                    
-                case 'quarry':
-                    geometry = new THREE.BoxGeometry(3.5, 2.5, 3.5);
-                    material = new THREE.MeshLambertMaterial({ color: 0x696969 });
-                    building = new THREE.Mesh(geometry, material);
-                    break;
-                    
-                case 'mine':
-                    geometry = new THREE.CylinderGeometry(1.5, 2, 3, 8);
-                    material = new THREE.MeshLambertMaterial({ color: 0x2F4F4F });
-                    building = new THREE.Mesh(geometry, material);
-                    break;
-                    
-                case 'farm':
-                    geometry = new THREE.BoxGeometry(5, 1, 4);
-                    material = new THREE.MeshLambertMaterial({ color: 0xDAA520 });
-                    building = new THREE.Mesh(geometry, material);
-                    break;
-            }
-            
-            building.position.set(x, y, z);
-            building.castShadow = true;
-            building.receiveShadow = true;
-            building.userData = { type: type };
-            
-            scene.add(building);
-            buildings.push(building);
-            
+            sceneObjects.push(building);
             return building;
+        }
+        
+        function getBuildingColor(type) {
+            const colors = {
+                'hut': '#8B4513',
+                'sawmill': '#2E8B57',
+                'quarry': '#696969',
+                'mine': '#2F4F4F',
+                'farm': '#DAA520'
+            };
+            return colors[type] || '#666666';
         }
         
         function createVillagers() {
@@ -399,110 +351,171 @@
         }
         
         function createVillager() {
-            // Тело жителя
-            const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 8);
-            const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3498db });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            
-            // Голова
-            const headGeometry = new THREE.SphereGeometry(0.4, 8, 8);
-            const headMaterial = new THREE.MeshLambertMaterial({ color: 0xFFE0B2 });
-            const head = new THREE.Mesh(headGeometry, headMaterial);
-            head.position.y = 0.9;
-            
-            const villager = new THREE.Group();
-            villager.add(body);
-            villager.add(head);
-            
-            // Случайная начальная позиция
-            const x = (Math.random() - 0.5) * 20;
-            const z = (Math.random() - 0.5) * 20;
-            villager.position.set(x, 1, z);
-            
-            villager.castShadow = true;
-            scene.add(villager);
-            
-            // Добавляем данные для движения
-            villager.userData = {
+            const villager = {
+                x: (Math.random() - 0.5) * 20,
+                y: 1,
+                z: (Math.random() - 0.5) * 20,
+                radius: 0.3,
+                color: '#3498db',
                 speed: 0.02 + Math.random() * 0.02,
-                targetX: x,
-                targetZ: z,
+                targetX: 0,
+                targetZ: 0,
                 idleTime: 0
             };
+            
+            // Устанавливаем начальную цель
+            updateVillagerTarget(villager);
             
             villagers.push(villager);
         }
         
+        function updateVillagerTarget(villager) {
+            // Выбираем случайное здание как цель
+            if (sceneObjects.filter(obj => obj.type !== 'ground').length > 0) {
+                const buildings = sceneObjects.filter(obj => obj.type !== 'ground');
+                const randomBuilding = buildings[Math.floor(Math.random() * buildings.length)];
+                villager.targetX = randomBuilding.x + (Math.random() - 0.5) * 8;
+                villager.targetZ = randomBuilding.z + (Math.random() - 0.5) * 8;
+            } else {
+                // Если зданий нет, случайная позиция
+                villager.targetX = (Math.random() - 0.5) * 30;
+                villager.targetZ = (Math.random() - 0.5) * 30;
+            }
+            villager.idleTime = 0;
+        }
+        
         function animateVillagers() {
             villagers.forEach(villager => {
-                const data = villager.userData;
+                // Проверяем, достиг ли житель цели
+                const distance = Math.sqrt(
+                    Math.pow(villager.x - villager.targetX, 2) + 
+                    Math.pow(villager.z - villager.targetZ, 2)
+                );
                 
-                // Если житель достиг цели или простаивает слишком долго
-                if (Math.abs(villager.position.x - data.targetX) < 0.5 && 
-                    Math.abs(villager.position.z - data.targetZ) < 0.5 ||
-                    data.idleTime > 200) {
-                    
-                    // Выбираем новую цель возле случайного здания
-                    if (buildings.length > 0) {
-                        const randomBuilding = buildings[Math.floor(Math.random() * buildings.length)];
-                        data.targetX = randomBuilding.position.x + (Math.random() - 0.5) * 8;
-                        data.targetZ = randomBuilding.position.z + (Math.random() - 0.5) * 8;
-                    } else {
-                        // Если зданий нет, случайное движение по карте
-                        data.targetX = (Math.random() - 0.5) * 30;
-                        data.targetZ = (Math.random() - 0.5) * 30;
-                    }
-                    data.idleTime = 0;
+                if (distance < 0.5 || villager.idleTime > 200) {
+                    updateVillagerTarget(villager);
                 }
                 
-                // Движение к цели
-                const dx = data.targetX - villager.position.x;
-                const dz = data.targetZ - villager.position.z;
-                const distance = Math.sqrt(dx * dx + dz * dz);
-                
+                // Двигаем жителя к цели
                 if (distance > 0.5) {
-                    villager.position.x += (dx / distance) * data.speed;
-                    villager.position.z += (dz / distance) * data.speed;
+                    const dx = villager.targetX - villager.x;
+                    const dz = villager.targetZ - villager.z;
+                    const norm = Math.sqrt(dx * dx + dz * dz);
                     
-                    // Поворот в направлении движения
-                    villager.rotation.y = Math.atan2(dx, dz);
+                    villager.x += (dx / norm) * villager.speed;
+                    villager.z += (dz / norm) * villager.speed;
                 } else {
-                    data.idleTime++;
+                    villager.idleTime++;
                 }
             });
         }
         
-        function animate() {
-            requestAnimationFrame(animate);
+        function project3D(x, y, z) {
+            // Простая 3D проекция
+            const scale = 20;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
             
-            // Анимация жителей
+            // Учитываем позицию камеры
+            const relX = x - camera.x;
+            const relY = y - camera.y;
+            const relZ = z - camera.z;
+            
+            // Простая перспектива
+            const distance = Math.sqrt(relX * relX + relY * relY + relZ * relZ);
+            const scaleFactor = scale / (distance + 10);
+            
+            return {
+                x: centerX + relX * scaleFactor,
+                y: centerY - relY * scaleFactor,
+                scale: scaleFactor
+            };
+        }
+        
+        function render() {
+            // Очищаем canvas
+            ctx.fillStyle = '#1a2a6c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем землю
+            ctx.fillStyle = '#2E8B57';
+            ctx.fillRect(0, canvas.height * 0.6, canvas.width, canvas.height * 0.4);
+            
+            // Рисуем здания
+            sceneObjects.forEach(obj => {
+                if (obj.type !== 'ground') {
+                    const proj = project3D(obj.x, obj.y, obj.z);
+                    const size = obj.width * proj.scale * 10;
+                    
+                    ctx.fillStyle = obj.color;
+                    ctx.fillRect(proj.x - size/2, proj.y - size/2, size, size);
+                    
+                    // Подпись здания
+                    ctx.fillStyle = 'white';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(getBuildingName(obj.type), proj.x, proj.y - size/2 - 5);
+                }
+            });
+            
+            // Рисуем жителей
+            villagers.forEach(villager => {
+                const proj = project3D(villager.x, villager.y, villager.z);
+                const radius = villager.radius * proj.scale * 20;
+                
+                ctx.fillStyle = villager.color;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Голова
+                ctx.fillStyle = '#FFE0B2';
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y - radius, radius * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Рисуем снег на земле
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            for (let i = 0; i < 20; i++) {
+                const x = Math.random() * canvas.width;
+                const y = canvas.height * 0.6 + Math.random() * canvas.height * 0.4;
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function animate() {
+            // Анимируем жителей
             animateVillagers();
             
-            // Медленное вращение камеры вокруг сцены
-            const time = Date.now() * 0.0005;
-            camera.position.x = Math.cos(time) * 20;
-            camera.position.z = Math.sin(time) * 20;
-            camera.lookAt(0, 0, 0);
+            // Медленно двигаем камеру по кругу
+            const time = Date.now() * 0.001;
+            camera.x = Math.cos(time) * 20;
+            camera.z = Math.sin(time) * 20;
             
-            renderer.render(scene, camera);
+            // Рендерим сцену
+            render();
+            
+            requestAnimationFrame(animate);
         }
         
         function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
         
         // Снегопад
         function createSnow() {
             const snowContainer = document.getElementById('snow-container');
-            const snowflakeCount = 150;
+            const snowflakeCount = 100;
             
             for (let i = 0; i < snowflakeCount; i++) {
                 const snowflake = document.createElement('div');
                 snowflake.classList.add('snowflake');
                 
-                const size = Math.random() * 5 + 2;
+                const size = Math.random() * 4 + 1;
                 snowflake.style.width = `${size}px`;
                 snowflake.style.height = `${size}px`;
                 
@@ -533,45 +546,61 @@
             document.getElementById('gold-count').textContent = resources.gold;
         }
         
+        function getBuildingName(type) {
+            const names = {
+                'hut': 'Хижина',
+                'sawmill': 'Лесопилка',
+                'quarry': 'Каменоломня',
+                'mine': 'Шахта',
+                'farm': 'Ферма'
+            };
+            return names[type] || type;
+        }
+        
         function buildBuilding(type) {
-            // Случайная позиция для нового здания
             const x = (Math.random() - 0.5) * 15;
             const z = (Math.random() - 0.5) * 15;
             
             createBuilding(type, x, 0, z);
-            alert(`Построена ${getBuildingName(type)}!`);
-        }
-        
-        function getBuildingName(type) {
-            const names = {
-                hut: 'Хижина',
-                sawmill: 'Лесопилка',
-                quarry: 'Каменоломня',
-                mine: 'Шахта',
-                farm: 'Ферма'
-            };
-            return names[type] || type;
+            
+            // Обновляем ресурсы
+            resources.wood -= 20;
+            resources.stone -= 10;
+            updateResources();
+            
+            // Добавляем нового жителя при постройке хижины
+            if (type === 'hut') {
+                setTimeout(() => {
+                    createVillager();
+                    alert('Новый житель присоединился к поселению!');
+                }, 1000);
+            }
         }
         
         function collectResources() {
             resources.wood += 15;
             resources.stone += 8;
             resources.food += 12;
+            resources.coal += 5;
             updateResources();
+            
+            // Меняем температуру
+            const tempElement = document.getElementById('temp-value');
+            const currentTemp = parseInt(tempElement.textContent);
+            const newTemp = currentTemp + (Math.random() > 0.5 ? 1 : -1);
+            tempElement.textContent = newTemp + '°C';
         }
         
         function explore() {
             const events = [
-                'Вы нашли заброшенный лагерь! +20 дерева, +10 камня',
-                'На вас напали волки! -15 еды',
-                'Вы нашли сундук с сокровищами! +5 золота'
+                { message: 'Вы нашли заброшенный лагерь! +20 дерева, +10 камня', wood: 20, stone: 10 },
+                { message: 'На вас напали волки! -15 еды', food: -15 },
+                { message: 'Вы нашли сундук с сокровищами! +5 золота', gold: 5 },
+                { message: 'Обнаружена новая территория! +30 дерева', wood: 30 }
             ];
-            const randomEvent = events[Math.floor(Math.random() * events.length)];
-            alert(randomEvent);
-        }
-        
-        function assignWorkers() {
-            alert('Меню назначения рабочих');
-        }
-        
-      
+            
+            const event = events[Math.floor(Math.random() * events.length)];
+            alert(event.message);
+            
+            // Применяем изменения ресурсов
+            Object.keys(ev
