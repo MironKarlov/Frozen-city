@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frozen City</title>
+    <title>Frozen City 3D</title>
     <style>
         * {
             margin: 0;
@@ -13,67 +13,115 @@
         }
         
         body {
-            background: linear-gradient(135deg, #1a2a6c, #2a3c7c);
+            background: #000;
             color: white;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
         }
         
-        .game-container {
-            text-align: center;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 40px;
-            border-radius: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-            max-width: 400px;
-            width: 90%;
+        #gameContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
         }
         
         .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             font-size: 28px;
             font-weight: bold;
             color: #4fc3f7;
-            margin-bottom: 30px;
             text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border-radius: 15px;
+            border: 2px solid #4fc3f7;
+            z-index: 100;
         }
         
-        .buildings-list {
+        .buildings-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            pointer-events: all;
+        }
+        
+        .building-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(30, 40, 90, 0.8);
+            border: 2px solid rgba(100, 150, 255, 0.3);
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-        }
-        
-        .building-item {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            background: rgba(30, 40, 90, 0.8);
-            padding: 15px 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
             transition: all 0.3s;
         }
         
-        .building-item:hover {
-            transform: translateX(10px);
+        .building-btn:hover {
+            transform: translateY(-5px);
             border-color: #4fc3f7;
+            box-shadow: 0 5px 15px rgba(79, 195, 247, 0.3);
+        }
+        
+        .building-icon {
+            font-size: 24px;
         }
         
         .building-name {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
         }
         
         .building-level {
-            font-size: 16px;
+            font-size: 10px;
             color: #4fc3f7;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px 15px;
-            border-radius: 15px;
-            border: 1px solid #4fc3f7;
+        }
+        
+        .resources {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .resource {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
         }
         
         .snowflakes {
@@ -83,7 +131,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: -1;
+            z-index: 3;
         }
         
         .snowflake {
@@ -100,7 +148,6 @@
             }
         }
         
-        /* Анимация загрузки */
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -113,77 +160,362 @@
     </style>
 </head>
 <body>
-    <div class="snowflakes" id="snowflakes"></div>
+    <div class="loading pulse"># Загрузка Frozen City...</div>
+    <div id="gameContainer"></div>
     
-    <div class="game-container">
-        <div class="loading pulse"># Загрузка Frozen City...</div>
-        
-        <div class="buildings-list">
-            <div class="building-item">
-                <span class="building-name">Хижина</span>
-                <span class="building-level">Ур. 2</span>
+    <div class="ui-overlay">
+        <div class="resources">
+            <div class="resource">
+                <span>🥕 Еда: <span id="food-count">150</span></span>
             </div>
-            <div class="building-item">
-                <span class="building-name">Лесопилка</span>
-                <span class="building-level">Ур. 1</span>
+            <div class="resource">
+                <span>🌲 Дерево: <span id="wood-count">80</span></span>
             </div>
-            <div class="building-item">
-                <span class="building-name">Каменоломня</span>
-                <span class="building-level">Ур. 1</span>
+            <div class="resource">
+                <span>⛰️ Камень: <span id="stone-count">45</span></span>
             </div>
-            <div class="building-item">
-                <span class="building-name">Шахта</span>
-                <span class="building-level">Ур. 1</span>
-            </div>
-            <div class="building-item">
-                <span class="building-name">Ферма</span>
-                <span class="building-level">Ур. 1</span>
+            <div class="resource">
+                <span>⚫ Уголь: <span id="coal-count">30</span></span>
             </div>
         </div>
+        
+        <div class="buildings-panel">
+            <div class="building-btn" onclick="buildBuilding('hut')">
+                <div class="building-icon">🏠</div>
+                <div class="building-name">Хижина</div>
+                <div class="building-level">Ур. 2</div>
+            </div>
+            <div class="building-btn" onclick="buildBuilding('sawmill')">
+                <div class="building-icon">🌲</div>
+                <div class="building-name">Лесопилка</div>
+                <div class="building-level">Ур. 1</div>
+            </div>
+            <div class="building-btn" onclick="buildBuilding('quarry')">
+                <div class="building-icon">⛰️</div>
+                <div class="building-name">Каменоломня</div>
+                <div class="building-level">Ур. 1</div>
+            </div>
+            <div class="building-btn" onclick="buildBuilding('mine')">
+                <div class="building-icon">⛏️</div>
+                <div class="building-name">Шахта</div>
+                <div class="building-level">Ур. 1</div>
+            </div>
+            <div class="building-btn" onclick="buildBuilding('farm')">
+                <div class="building-icon">🌾</div>
+                <div class="building-name">Ферма</div>
+                <div class="building-level">Ур. 1</div>
+            </div>
+        </div>
+        
+        <div class="snowflakes" id="snowflakes"></div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // Создание снежинок
+        // 3D сцена
+        let scene, camera, renderer;
+        let buildings = [];
+        let villagers = [];
+        
+        function init() {
+            // Создаем сцену
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a2a6c);
+            scene.fog = new THREE.Fog(0x1a2a6c, 10, 50);
+            
+            // Создаем камеру
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(20, 15, 20);
+            camera.lookAt(0, 0, 0);
+            
+            // Создаем рендерер
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('gameContainer').appendChild(renderer.domElement);
+            
+            // Освещение
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(20, 30, 10);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // Создаем землю
+            createGround();
+            
+            // Создаем начальные здания
+            createInitialBuildings();
+            
+            // Создаем жителей
+            createVillagers();
+            
+            // Скрываем загрузку
+            setTimeout(() => {
+                document.querySelector('.loading').style.display = 'none';
+            }, 2000);
+            
+            // Запускаем анимацию
+            animate();
+            
+            // Обработка изменения размера
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        function createGround() {
+            // Земля
+            const groundGeometry = new THREE.PlaneGeometry(100, 100, 32);
+            const groundMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x2E8B57,
+                transparent: true,
+                opacity: 0.9
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Снег на земле
+            const snowGeometry = new THREE.PlaneGeometry(100, 100, 32);
+            const snowMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.2
+            });
+            const snow = new THREE.Mesh(snowGeometry, snowMaterial);
+            snow.rotation.x = -Math.PI / 2;
+            snow.position.y = 0.01;
+            scene.add(snow);
+        }
+        
+        function createInitialBuildings() {
+            createBuilding('hut', -8, 0, -5);
+            createBuilding('hut', -5, 0, -8);
+            createBuilding('sawmill', 5, 0, -6);
+            createBuilding('quarry', 8, 0, 3);
+            createBuilding('farm', -3, 0, 6);
+        }
+        
+        function createBuilding(type, x, y, z) {
+            let geometry, material, building;
+            
+            switch(type) {
+                case 'hut':
+                    geometry = new THREE.BoxGeometry(3, 2, 3);
+                    material = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                    building = new THREE.Mesh(geometry, material);
+                    
+                    // Крыша
+                    const roofGeometry = new THREE.ConeGeometry(2.2, 1.5, 4);
+                    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
+                    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+                    roof.rotation.y = Math.PI / 4;
+                    roof.position.y = 1.75;
+                    building.add(roof);
+                    break;
+                    
+                case 'sawmill':
+                    geometry = new THREE.BoxGeometry(4, 3, 4);
+                    material = new THREE.MeshLambertMaterial({ color: 0x2E8B57 });
+                    building = new THREE.Mesh(geometry, material);
+                    break;
+                    
+                case 'quarry':
+                    geometry = new THREE.BoxGeometry(3.5, 2.5, 3.5);
+                    material = new THREE.MeshLambertMaterial({ color: 0x696969 });
+                    building = new THREE.Mesh(geometry, material);
+                    break;
+                    
+                case 'mine':
+                    geometry = new THREE.CylinderGeometry(1.5, 2, 3, 8);
+                    material = new THREE.MeshLambertMaterial({ color: 0x2F4F4F });
+                    building = new THREE.Mesh(geometry, material);
+                    break;
+                    
+                case 'farm':
+                    geometry = new THREE.BoxGeometry(5, 1, 4);
+                    material = new THREE.MeshLambertMaterial({ color: 0xDAA520 });
+                    building = new THREE.Mesh(geometry, material);
+                    break;
+            }
+            
+            building.position.set(x, y, z);
+            building.castShadow = true;
+            building.receiveShadow = true;
+            building.userData = { type: type };
+            
+            scene.add(building);
+            buildings.push(building);
+            
+            return building;
+        }
+        
+        function createVillagers() {
+            for (let i = 0; i < 5; i++) {
+                createVillager();
+            }
+        }
+        
+        function createVillager() {
+            // Тело жителя
+            const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 8);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3498db });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            
+            // Голова
+            const headGeometry = new THREE.SphereGeometry(0.4, 8, 8);
+            const headMaterial = new THREE.MeshLambertMaterial({ color: 0xFFE0B2 });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 0.9;
+            
+            const villager = new THREE.Group();
+            villager.add(body);
+            villager.add(head);
+            
+            // Случайная начальная позиция
+            const x = (Math.random() - 0.5) * 20;
+            const z = (Math.random() - 0.5) * 20;
+            villager.position.set(x, 1, z);
+            
+            villager.castShadow = true;
+            scene.add(villager);
+            
+            // Добавляем данные для движения
+            villager.userData = {
+                speed: 0.02 + Math.random() * 0.02,
+                targetX: x,
+                targetZ: z,
+                idleTime: 0
+            };
+            
+            villagers.push(villager);
+        }
+        
+        function animateVillagers() {
+            villagers.forEach(villager => {
+                const data = villager.userData;
+                
+                // Если житель достиг цели или простаивает слишком долго
+                if (Math.abs(villager.position.x - data.targetX) < 0.5 && 
+                    Math.abs(villager.position.z - data.targetZ) < 0.5 ||
+                    data.idleTime > 200) {
+                    
+                    // Выбираем новую цель возле случайного здания
+                    if (buildings.length > 0) {
+                        const randomBuilding = buildings[Math.floor(Math.random() * buildings.length)];
+                        data.targetX = randomBuilding.position.x + (Math.random() - 0.5) * 8;
+                        data.targetZ = randomBuilding.position.z + (Math.random() - 0.5) * 8;
+                    } else {
+                        // Если зданий нет, случайное движение по карте
+                        data.targetX = (Math.random() - 0.5) * 30;
+                        data.targetZ = (Math.random() - 0.5) * 30;
+                    }
+                    data.idleTime = 0;
+                }
+                
+                // Движение к цели
+                const dx = data.targetX - villager.position.x;
+                const dz = data.targetZ - villager.position.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                if (distance > 0.5) {
+                    villager.position.x += (dx / distance) * data.speed;
+                    villager.position.z += (dz / distance) * data.speed;
+                    
+                    // Поворот в направлении движения
+                    villager.rotation.y = Math.atan2(dx, dz);
+                } else {
+                    data.idleTime++;
+                }
+            });
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Анимация жителей
+            animateVillagers();
+            
+            // Медленное вращение камеры вокруг сцены
+            const time = Date.now() * 0.0005;
+            camera.position.x = Math.cos(time) * 25;
+            camera.position.z = Math.sin(time) * 25;
+            camera.lookAt(0, 0, 0);
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Снегопад
         function createSnowflakes() {
             const container = document.getElementById('snowflakes');
-            const snowflakeCount = 50;
+            const snowflakeCount = 150;
             
             for (let i = 0; i < snowflakeCount; i++) {
                 const snowflake = document.createElement('div');
                 snowflake.classList.add('snowflake');
                 
-                // Случайный размер
                 const size = Math.random() * 5 + 2;
                 snowflake.style.width = `${size}px`;
                 snowflake.style.height = `${size}px`;
                 
-                // Случайная позиция
                 snowflake.style.left = `${Math.random() * 100}%`;
                 
-                // Случайная скорость
                 const duration = Math.random() * 10 + 5;
                 snowflake.style.animationDuration = `${duration}s`;
-                
-                // Случайная задержка
                 snowflake.style.animationDelay = `${Math.random() * 5}s`;
                 
                 container.appendChild(snowflake);
             }
         }
         
-        // Имитация загрузки
-        function simulateLoading() {
-            setTimeout(() => {
-                document.querySelector('.loading').textContent = "✅ Frozen City загружена!";
-                document.querySelector('.loading').style.color = "#8bc34a";
-                document.querySelector('.loading').classList.remove('pulse');
-            }, 3000);
+        // Игровая логика
+        let resources = {
+            food: 150,
+            wood: 80,
+            stone: 45,
+            coal: 30
+        };
+        
+        function updateResources() {
+            document.getElementById('food-count').textContent = resources.food;
+            document.getElementById('wood-count').textContent = resources.wood;
+            document.getElementById('stone-count').textContent = resources.stone;
+            document.getElementById('coal-count').textContent = resources.coal;
         }
         
-        // Запуск при загрузке страницы
+        function buildBuilding(type) {
+            const x = (Math.random() - 0.5) * 15;
+            const z = (Math.random() - 0.5) * 15;
+            
+            createBuilding(type, x, 0, z);
+            
+            // Обновляем ресурсы
+            resources.wood -= 20;
+            resources.stone -= 10;
+            updateResources();
+            
+            // Добавляем нового жителя при постройке хижины
+            if (type === 'hut') {
+                setTimeout(() => {
+                    createVillager();
+                    alert('Новый житель присоединился к поселению!');
+                }, 1000);
+            }
+        }
+        
+        // Запуск игры
         window.onload = function() {
+            init();
             createSnowflakes();
-            simulateLoading();
+            updateResources();
         };
     </script>
 </body>
