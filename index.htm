@@ -3,170 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frozen City 3D</title>
+    <title>Frozen City</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Arial', sans-serif;
         }
         
         body {
-            background: #000;
-            color: #fff;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-        }
-        
-        #gameContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        
-        .ui-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 2;
-        }
-        
-        .resources {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+            background: linear-gradient(135deg, #1a2a6c, #2a3c7c);
+            color: white;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .resource {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-        }
-        
-        .resource-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-        }
-        
-        .food { background: #ff9800; }
-        .wood { background: #8bc34a; }
-        .stone { background: #9e9e9e; }
-        .coal { background: #424242; }
-        .gold { background: #ffd700; }
-        
-        .buildings-panel {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .building-btn {
-            width: 80px;
-            height: 80px;
-            background: rgba(30, 40, 90, 0.8);
-            border: 2px solid rgba(100, 150, 255, 0.3);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            gap: 5px;
-            cursor: pointer;
-            pointer-events: all;
+            align-items: center;
+        }
+        
+        .game-container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .loading {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4fc3f7;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+        }
+        
+        .buildings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .building-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 40, 90, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s;
         }
         
-        .building-btn:hover {
-            transform: translateY(-5px);
+        .building-item:hover {
+            transform: translateX(10px);
             border-color: #4fc3f7;
-            box-shadow: 0 5px 15px rgba(79, 195, 247, 0.3);
-        }
-        
-        .building-icon {
-            font-size: 24px;
         }
         
         .building-name {
-            font-size: 12px;
-            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
         }
         
         .building-level {
-            font-size: 10px;
+            font-size: 16px;
             color: #4fc3f7;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 15px;
+            border: 1px solid #4fc3f7;
         }
         
-        .temperature {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 18px;
-        }
-        
-        .controls {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .control-btn {
-            padding: 10px 15px;
-            background: rgba(30, 40, 90, 0.8);
-            border: 1px solid rgba(100, 150, 255, 0.3);
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            pointer-events: all;
-            transition: all 0.3s;
-        }
-        
-        .control-btn:hover {
-            background: rgba(50, 60, 120, 0.9);
-            border-color: #4fc3f7;
-        }
-        
-        .snow {
+        .snowflakes {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 3;
+            z-index: -1;
         }
         
         .snowflake {
@@ -182,428 +99,92 @@
                 transform: translateY(100vh);
             }
         }
-
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            color: #4fc3f7;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px 40px;
-            border-radius: 10px;
-            border: 2px solid #4fc3f7;
+        
+        /* Анимация загрузки */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
         }
     </style>
 </head>
 <body>
-    <div class="loading" id="loading">🚀 Загрузка Frozen City...</div>
-    <div id="gameContainer"></div>
+    <div class="snowflakes" id="snowflakes"></div>
     
-    <div class="ui-overlay">
-        <div class="resources">
-            <div class="resource">
-                <div class="resource-icon food"></div>
-                <span id="food-count">150</span>
+    <div class="game-container">
+        <div class="loading pulse"># Загрузка Frozen City...</div>
+        
+        <div class="buildings-list">
+            <div class="building-item">
+                <span class="building-name">Хижина</span>
+                <span class="building-level">Ур. 2</span>
             </div>
-            <div class="resource">
-                <div class="resource-icon wood"></div>
-                <span id="wood-count">80</span>
+            <div class="building-item">
+                <span class="building-name">Лесопилка</span>
+                <span class="building-level">Ур. 1</span>
             </div>
-            <div class="resource">
-                <div class="resource-icon stone"></div>
-                <span id="stone-count">45</span>
+            <div class="building-item">
+                <span class="building-name">Каменоломня</span>
+                <span class="building-level">Ур. 1</span>
             </div>
-            <div class="resource">
-                <div class="resource-icon coal"></div>
-                <span id="coal-count">30</span>
+            <div class="building-item">
+                <span class="building-name">Шахта</span>
+                <span class="building-level">Ур. 1</span>
             </div>
-            <div class="resource">
-                <div class="resource-icon gold"></div>
-                <span id="gold-count">10</span>
+            <div class="building-item">
+                <span class="building-name">Ферма</span>
+                <span class="building-level">Ур. 1</span>
             </div>
         </div>
-        
-        <div class="temperature">
-            <div>❄️</div>
-            <div id="temp-value">-25°C</div>
-        </div>
-        
-        <div class="controls">
-            <button class="control-btn" onclick="collectResources()">Собрать ресурсы</button>
-            <button class="control-btn" onclick="explore()">Исследовать</button>
-            <button class="control-btn" onclick="assignWorkers()">Назначить рабочих</button>
-        </div>
-        
-        <div class="buildings-panel">
-            <div class="building-btn" onclick="buildBuilding('hut')">
-                <div class="building-icon">🏠</div>
-                <div class="building-name">Хижина</div>
-                <div class="building-level">Ур. 2</div>
-            </div>
-            <div class="building-btn" onclick="buildBuilding('sawmill')">
-                <div class="building-icon">🌲</div>
-                <div class="building-name">Лесопилка</div>
-                <div class="building-level">Ур. 1</div>
-            </div>
-            <div class="building-btn" onclick="buildBuilding('quarry')">
-                <div class="building-icon">⛰️</div>
-                <div class="building-name">Каменоломня</div>
-                <div class="building-level">Ур. 1</div>
-            </div>
-            <div class="building-btn" onclick="buildBuilding('mine')">
-                <div class="building-icon">⛏️</div>
-                <div class="building-name">Шахта</div>
-                <div class="building-level">Ур. 1</div>
-            </div>
-            <div class="building-btn" onclick="buildBuilding('farm')">
-                <div class="building-icon">🌾</div>
-                <div class="building-name">Ферма</div>
-                <div class="building-level">Ур. 1</div>
-            </div>
-        </div>
-        
-        <div class="snow" id="snow-container"></div>
     </div>
 
     <script>
-        // Простой 3D движок без Three.js
-        let sceneObjects = [];
-        let villagers = [];
-        let camera = { x: 15, y: 10, z: 15 };
-        let canvas, ctx;
-        
-        function init() {
-            console.log("🚀 Инициализация игры...");
-            
-            // Создаем canvas
-            canvas = document.createElement('canvas');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            canvas.style.display = 'block';
-            document.getElementById('gameContainer').appendChild(canvas);
-            ctx = canvas.getContext('2d');
-            
-            // Создаем землю
-            createGround();
-            
-            // Создаем начальные здания
-            createInitialBuildings();
-            
-            // Создаем жителей
-            createVillagers();
-            
-            // Скрываем загрузку
-            setTimeout(() => {
-                document.getElementById('loading').style.display = 'none';
-                console.log("✅ Игра загружена!");
-            }, 2000);
-            
-            // Запускаем анимацию
-            animate();
-            
-            // Обработка изменения размера
-            window.addEventListener('resize', onWindowResize);
-        }
-        
-        function createGround() {
-            sceneObjects.push({
-                type: 'ground',
-                color: '#2E8B57'
-            });
-        }
-        
-        function createInitialBuildings() {
-            createBuilding('hut', -8, 0, -5);
-            createBuilding('hut', -5, 0, -8);
-            createBuilding('sawmill', 5, 0, -6);
-            createBuilding('quarry', 8, 0, 3);
-            createBuilding('farm', -3, 0, 6);
-        }
-        
-        function createBuilding(type, x, y, z) {
-            const building = {
-                type: type,
-                x: x,
-                y: y,
-                z: z,
-                width: 3,
-                height: 2,
-                depth: 3,
-                color: getBuildingColor(type)
-            };
-            
-            sceneObjects.push(building);
-            return building;
-        }
-        
-        function getBuildingColor(type) {
-            const colors = {
-                'hut': '#8B4513',
-                'sawmill': '#2E8B57',
-                'quarry': '#696969',
-                'mine': '#2F4F4F',
-                'farm': '#DAA520'
-            };
-            return colors[type] || '#666666';
-        }
-        
-        function createVillagers() {
-            for (let i = 0; i < 5; i++) {
-                createVillager();
-            }
-        }
-        
-        function createVillager() {
-            const villager = {
-                x: (Math.random() - 0.5) * 20,
-                y: 1,
-                z: (Math.random() - 0.5) * 20,
-                radius: 0.3,
-                color: '#3498db',
-                speed: 0.02 + Math.random() * 0.02,
-                targetX: 0,
-                targetZ: 0,
-                idleTime: 0
-            };
-            
-            updateVillagerTarget(villager);
-            villagers.push(villager);
-        }
-        
-        function updateVillagerTarget(villager) {
-            if (sceneObjects.filter(obj => obj.type !== 'ground').length > 0) {
-                const buildings = sceneObjects.filter(obj => obj.type !== 'ground');
-                const randomBuilding = buildings[Math.floor(Math.random() * buildings.length)];
-                villager.targetX = randomBuilding.x + (Math.random() - 0.5) * 8;
-                villager.targetZ = randomBuilding.z + (Math.random() - 0.5) * 8;
-            } else {
-                villager.targetX = (Math.random() - 0.5) * 30;
-                villager.targetZ = (Math.random() - 0.5) * 30;
-            }
-            villager.idleTime = 0;
-        }
-        
-        function animateVillagers() {
-            villagers.forEach(villager => {
-                const distance = Math.sqrt(
-                    Math.pow(villager.x - villager.targetX, 2) + 
-                    Math.pow(villager.z - villager.targetZ, 2)
-                );
-                
-                if (distance < 0.5 || villager.idleTime > 200) {
-                    updateVillagerTarget(villager);
-                }
-                
-                if (distance > 0.5) {
-                    const dx = villager.targetX - villager.x;
-                    const dz = villager.targetZ - villager.z;
-                    const norm = Math.sqrt(dx * dx + dz * dz);
-                    
-                    villager.x += (dx / norm) * villager.speed;
-                    villager.z += (dz / norm) * villager.speed;
-                } else {
-                    villager.idleTime++;
-                }
-            });
-        }
-        
-        function project3D(x, y, z) {
-            const scale = 20;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            
-            const relX = x - camera.x;
-            const relY = y - camera.y;
-            const relZ = z - camera.z;
-            
-            const distance = Math.sqrt(relX * relX + relY * relY + relZ * relZ);
-            const scaleFactor = scale / (distance + 10);
-            
-            return {
-                x: centerX + relX * scaleFactor,
-                y: centerY - relY * scaleFactor,
-                scale: scaleFactor
-            };
-        }
-        
-        function render() {
-            // Очищаем canvas
-            ctx.fillStyle = '#1a2a6c';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Рисуем землю
-            ctx.fillStyle = '#2E8B57';
-            ctx.fillRect(0, canvas.height * 0.6, canvas.width, canvas.height * 0.4);
-            
-            // Рисуем здания
-            sceneObjects.forEach(obj => {
-                if (obj.type !== 'ground') {
-                    const proj = project3D(obj.x, obj.y, obj.z);
-                    const size = obj.width * proj.scale * 10;
-                    
-                    ctx.fillStyle = obj.color;
-                    ctx.fillRect(proj.x - size/2, proj.y - size/2, size, size);
-                    
-                    // Подпись здания
-                    ctx.fillStyle = 'white';
-                    ctx.font = '10px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(getBuildingName(obj.type), proj.x, proj.y - size/2 - 5);
-                }
-            });
-            
-            // Рисуем жителей
-            villagers.forEach(villager => {
-                const proj = project3D(villager.x, villager.y, villager.z);
-                const radius = villager.radius * proj.scale * 20;
-                
-                ctx.fillStyle = villager.color;
-                ctx.beginPath();
-                ctx.arc(proj.x, proj.y, radius, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Голова
-                ctx.fillStyle = '#FFE0B2';
-                ctx.beginPath();
-                ctx.arc(proj.x, proj.y - radius, radius * 0.8, 0, Math.PI * 2);
-                ctx.fill();
-            });
-            
-            // Рисуем снег на земле
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            for (let i = 0; i < 20; i++) {
-                const x = Math.random() * canvas.width;
-                const y = canvas.height * 0.6 + Math.random() * canvas.height * 0.4;
-                ctx.beginPath();
-                ctx.arc(x, y, 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        function animate() {
-            animateVillagers();
-            
-            const time = Date.now() * 0.001;
-            camera.x = Math.cos(time) * 20;
-            camera.z = Math.sin(time) * 20;
-            
-            render();
-            requestAnimationFrame(animate);
-        }
-        
-        function onWindowResize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        
-        // Снегопад
-        function createSnow() {
-            const snowContainer = document.getElementById('snow-container');
-            const snowflakeCount = 100;
+        // Создание снежинок
+        function createSnowflakes() {
+            const container = document.getElementById('snowflakes');
+            const snowflakeCount = 50;
             
             for (let i = 0; i < snowflakeCount; i++) {
                 const snowflake = document.createElement('div');
                 snowflake.classList.add('snowflake');
                 
-                const size = Math.random() * 4 + 1;
+                // Случайный размер
+                const size = Math.random() * 5 + 2;
                 snowflake.style.width = `${size}px`;
                 snowflake.style.height = `${size}px`;
                 
+                // Случайная позиция
                 snowflake.style.left = `${Math.random() * 100}%`;
                 
+                // Случайная скорость
                 const duration = Math.random() * 10 + 5;
                 snowflake.style.animationDuration = `${duration}s`;
+                
+                // Случайная задержка
                 snowflake.style.animationDelay = `${Math.random() * 5}s`;
                 
-                snowContainer.appendChild(snowflake);
+                container.appendChild(snowflake);
             }
         }
         
-        // Игровая логика
-        let resources = {
-            food: 150,
-            wood: 80,
-            stone: 45,
-            coal: 30,
-            gold: 10
+        // Имитация загрузки
+        function simulateLoading() {
+            setTimeout(() => {
+                document.querySelector('.loading').textContent = "✅ Frozen City загружена!";
+                document.querySelector('.loading').style.color = "#8bc34a";
+                document.querySelector('.loading').classList.remove('pulse');
+            }, 3000);
+        }
+        
+        // Запуск при загрузке страницы
+        window.onload = function() {
+            createSnowflakes();
+            simulateLoading();
         };
-        
-        function updateResources() {
-            document.getElementById('food-count').textContent = resources.food;
-            document.getElementById('wood-count').textContent = resources.wood;
-            document.getElementById('stone-count').textContent = resources.stone;
-            document.getElementById('coal-count').textContent = resources.coal;
-            document.getElementById('gold-count').textContent = resources.gold;
-        }
-        
-        function getBuildingName(type) {
-            const names = {
-                'hut': 'Хижина',
-                'sawmill': 'Лесопилка',
-                'quarry': 'Каменоломня',
-                'mine': 'Шахта',
-                'farm': 'Ферма'
-            };
-            return names[type] || type;
-        }
-        
-        function buildBuilding(type) {
-            const x = (Math.random() - 0.5) * 15;
-            const z = (Math.random() - 0.5) * 15;
-            
-            createBuilding(type, x, 0, z);
-            
-            resources.wood -= 20;
-            resources.stone -= 10;
-            updateResources();
-            
-            if (type === 'hut') {
-                setTimeout(() => {
-                    createVillager();
-                    alert('Новый житель присоединился к поселению!');
-                }, 1000);
-            }
-        }
-        
-        function collectResources() {
-            resources.wood += 15;
-            resources.stone += 8;
-            resources.food += 12;
-            resources.coal += 5;
-            updateResources();
-            
-            const tempElement = document.getElementById('temp-value');
-            const currentTemp = parseInt(tempElement.textContent);
-            const newTemp = currentTemp + (Math.random() > 0.5 ? 1 : -1);
-            tempElement.textContent = newTemp + '°C';
-        }
-        
-        function explore() {
-            const events = [
-                { message: 'Вы нашли заброшенный лагерь! +20 дерева, +10 камня', wood: 20, stone: 10 },
-                { message: 'На вас напали волки! -15 еды', food: -15 },
-                { message: 'Вы нашли сундук с сокровищами! +5 золота', gold: 5 },
-                { message: 'Обнаружена новая территория! +30 дерева', wood: 30 }
-            ];
-            
-            const event = events[Math.floor(Math.random() * events.length)];
-            alert(event.message);
-            
-            // Применяем изменения ресурсов
-            Object.keys(event).forEach(key => {
-                if (key !== 'message' && resources[key] !== undefined) {
-                    resources[key] = Math.max(0, resources[key] + event[key]);
-                }
-            });
-            
-            updateResources();
-        }
-        
-        function assignWorkers() {
-            alert('Открыто меню назначения рабочих\nЗдесь можно распределить жителей по зданиям');
-        }
-        
-   
+    </script>
+</body>
+</html>
